@@ -5,6 +5,8 @@
 #include "Engine/Classes/Components/SphereComponent.h"
 #include "CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Engine/Classes/Components/TextRenderComponent.h"
+#include "Engine/Classes/Components/PrimitiveComponent.h"
+
 
 // Sets default values
 AHexGrid::AHexGrid()
@@ -35,32 +37,61 @@ void AHexGrid::createGrid()
 	SphereComponent->InitSphereRadius(40.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
 
+	const int32 height = 10;
+	const int32 width = 10;
 
+	//We got an array of cells that should be equal to height * width
 
-	UTextRenderComponent* Text = CreateDefaultSubobject<UTextRenderComponent>(TEXT("CountdownNumber"));
-	Text->SetupAttachment(RootComponent);
-	Text->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
-	Text->SetRelativeLocation(FVector(0.0f, 0.0f, 6.0f));
-	Text->SetHorizontalAlignment(EHTA_Center);
-	Text->SetVerticalAlignment(EVRTA_TextCenter);
-	Text->SetTextRenderColor(FColor(0, 0, 0, 1));
-	Text->SetWorldSize(150.0f);
-
-	//TODO Refactor, and loop, check catlike coding tutorial
+	for (int z = 0, i = 0; z < height; z++) {
+		for (int x = 0; x < width; x++) {
+			createCell(x, z, i++);
+		}
+	}
+	
 }
 
-void AHexGrid::createCell(int x, int y)
+void AHexGrid::createCell(int x, int y, int i)
 {
-	// Create and position a mesh component so we can see where our sphere is
-	UStaticMeshComponent* PlaneVisual = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("VisualRepresentation"));
-	PlaneVisual->SetupAttachment(RootComponent);
+	//Build location
+	FVector Location = FVector(x * 10.f, y * 10.f, 0.f);
+
+	//i is not in use yet
+	//Should be equal to index on the given cell array
+
+	FString IntAsString = "cell " + FString::FromInt(i);
+	FName ConvertedFString = FName(*IntAsString);
+
+	// Create and position plane on x y
+	//UStaticMeshComponent* PlaneVisual = CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString);
+	cells.Add(CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString));
+	cells[i]->SetupAttachment(RootComponent);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
 	if (SphereVisualAsset.Succeeded())
 	{
-		PlaneVisual->SetStaticMesh(SphereVisualAsset.Object);
-		PlaneVisual->SetRelativeLocation(FVector(0.0f, 0.0f, 5.0f));
-		PlaneVisual->SetWorldScale3D(FVector(0.8f));
+
+		cells[i]->SetStaticMesh(SphereVisualAsset.Object);
+		cells[i]->SetRelativeLocation(Location);
+		cells[i]->SetWorldScale3D(FVector(1.0f));
 	}
+
+	IntAsString = "CountdownNumber " + FString::FromInt(i);
+	ConvertedFString = FName(*IntAsString);
+
+	//Cast not working, cant array utextrendercomponent
+	cellNumbers.Add(CreateDefaultSubobject<UTextRenderComponent>(ConvertedFString));
+	UTextRenderComponent * myActor = Cast<UTextRenderComponent>(cellNumbers[i]);
+	if (myActor) {
+		myActor->SetupAttachment(RootComponent);
+		myActor->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
+		myActor->SetRelativeLocation(Location);
+		myActor->SetHorizontalAlignment(EHTA_Center);
+		myActor->SetVerticalAlignment(EVRTA_TextCenter);
+		myActor->SetTextRenderColor(FColor(0, 0, 0, 1));
+		myActor->SetWorldSize(15.0f);
+		myActor->SetText(IntAsString);
+	}
+
+	//TODO - TIME TO REFACTOR HEXMETRICS!
 }
 
 

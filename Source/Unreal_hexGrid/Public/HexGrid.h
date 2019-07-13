@@ -23,7 +23,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void createGrid();
-	void createCell(int, int);
+	void createCell(int, int, int);
 	
+	TArray<UStaticMeshComponent*> cells;
+	TArray<UPrimitiveComponent*> cellNumbers;
 
 };
