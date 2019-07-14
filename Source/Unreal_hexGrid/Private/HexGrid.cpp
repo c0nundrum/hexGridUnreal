@@ -2,12 +2,16 @@
 
 #include "HexGrid.h"
 #include "HexMetrics.h"
+#include "HexCell.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "Engine/Classes/Components/SphereComponent.h"
 #include "CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Engine/Classes/Components/TextRenderComponent.h"
 #include "Engine/Classes/Components/PrimitiveComponent.h"
 #include "Core/Public/Internationalization/Text.h"
+#include "Engine/Classes/Components/ChildActorComponent.h"
+#include "Runtime/CoreUObject/Public/UObject/UObjectGlobals.h"
+#include "ProceduralMeshComponent.h"
 
 #define LOCTEXT_NAMESPACE "Coordinates"
 
@@ -17,6 +21,12 @@ AHexGrid::AHexGrid()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	UProceduralMeshComponent* mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("GeneratedMesh"));
+	RootComponent = mesh;
+	// New in UE 4.17, multi-threaded PhysX cooking.
+	mesh->bUseAsyncCooking = true;
+
 	createGrid();
 }
 
@@ -34,15 +44,32 @@ void AHexGrid::Tick(float DeltaTime)
 
 }
 
+void AHexGrid::PostActorCreated()
+{
+	Super::PostActorCreated();
+
+	//FVector Location(0.0f, 0.0f, 0.0f);
+	//FRotator Rotation(0.0f, 0.0f, 0.0f);
+	//FActorSpawnParameters SpawnInfo;
+	//AHexCell* cellActor = GetWorld()->SpawnActor<AHexCell>(Location, Rotation, SpawnInfo);
+	//cellActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+
+	//This works better
+	UChildActorComponent* NewComp1 = NewObject<UChildActorComponent>(this);
+	NewComp1->bEditableWhenInherited = true;
+	NewComp1->RegisterComponent();
+	NewComp1->SetChildActorClass(AHexCell::StaticClass());
+	NewComp1->CreateChildActor();
+	NewComp1->AttachTo(RootComponent);
+
+}
+
 void AHexGrid::createGrid()
 {
 	USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	RootComponent = SphereComponent;
 	SphereComponent->InitSphereRadius(40.0f);
 	SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
-
-	const int32 height = 10;
-	const int32 width = 10;
 
 	//We got an array of cells that should be equal to height * width
 
@@ -58,9 +85,10 @@ void AHexGrid::createCell(int x, int y, int i)
 {
 
 	//Build location
-	FVector Location = FVector(x * (HexMetrics::innerRadius * 2.0f), 
-								y * (HexMetrics::outerRadius * 1.5f),
-								0.f);
+	FVector Location = FVector(
+		(x + y * 0.5f - y / 2) * (HexMetrics::innerRadius * 2.0f), 
+		y * (HexMetrics::outerRadius * 1.5f),
+		0.f);
 
 	//i is not in use yet
 	//Should be equal to index on the given cell array
@@ -69,7 +97,6 @@ void AHexGrid::createCell(int x, int y, int i)
 	FName ConvertedFString = FName(*IntAsString);
 
 	// Create and position plane on x y
-	//UStaticMeshComponent* PlaneVisual = CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString);
 	cells.Add(CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString));
 	cells[i]->SetupAttachment(RootComponent);
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
@@ -84,23 +111,21 @@ void AHexGrid::createCell(int x, int y, int i)
 	IntAsString = "CountdownNumber " + FString::FromInt(i);
 	ConvertedFString = FName(*IntAsString);
 
-	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0} \n {1}"), x, y);
+	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0}\n{1}"), x, y);
 
-	//Cast not working, cant array utextrendercomponent
+
 	cellNumbers.Add(CreateDefaultSubobject<UTextRenderComponent>(ConvertedFString));
-	UTextRenderComponent * myActor = Cast<UTextRenderComponent>(cellNumbers[i]);
-	if (myActor) {
-		myActor->SetupAttachment(RootComponent);
-		myActor->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
-		myActor->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 1.0f));
-		myActor->SetHorizontalAlignment(EHTA_Center);
-		myActor->SetVerticalAlignment(EVRTA_TextCenter);
-		myActor->SetTextRenderColor(FColor(0, 0, 0, 1));
-		myActor->SetWorldSize(30.0f);
-		myActor->SetText(coordinatesT);
+	UTextRenderComponent * coordinatesRenderComp = Cast<UTextRenderComponent>(cellNumbers[i]);
+	if (coordinatesRenderComp) {
+		coordinatesRenderComp->SetupAttachment(RootComponent);
+		coordinatesRenderComp->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
+		coordinatesRenderComp->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 1.0f));
+		coordinatesRenderComp->SetHorizontalAlignment(EHTA_Center);
+		coordinatesRenderComp->SetVerticalAlignment(EVRTA_TextCenter);
+		coordinatesRenderComp->SetTextRenderColor(FColor(0, 0, 0, 1));
+		coordinatesRenderComp->SetWorldSize(30.0f);
+		coordinatesRenderComp->SetText(coordinatesT);
 	}
-
-	//TODO - TIME TO REFACTOR HEXMETRICS!
 }
 
 

@@ -23,7 +23,6 @@ public:
 
 	// Sets default values for this actor's properties
 	AGrid();
-	void CreateTriangle();
 	void CreateTriangle(FVector, FVector, FVector);
 	void CreateTriangle(TArray<Triangle> triangles);
 
@@ -41,10 +40,10 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UProceduralMeshComponent * mesh;
 
-	//DEBUG vectors
-	FVector v1 = FVector(0, 0, 0);
-	FVector v2 = FVector(0, 100, 0);
-	FVector v3 = FVector(0, 0, 100);
+	////DEBUG vectors
+	//FVector v1 = FVector(0, 0, 0);
+	//FVector v2 = FVector(0, 100, 0);
+	//FVector v3 = FVector(0, 0, 100);
 
 	//static float outerRadius;
 	//static float innerRadius;

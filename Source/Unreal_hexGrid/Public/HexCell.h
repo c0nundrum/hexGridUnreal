@@ -4,38 +4,34 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HexGrid.generated.h"
-
-
+#include "ProceduralMeshComponent.h"
+#include "HexCell.generated.h"
 UCLASS()
-class UNREAL_HEXGRID_API AHexGrid : public AActor
+class UNREAL_HEXGRID_API AHexCell : public AActor
 {
 	GENERATED_BODY()
-	
 
+	struct Triangle {
+		FVector v1;
+		FVector v2;
+		FVector v3;
+	};
+	
 public:	
 	// Sets default values for this actor's properties
-	AHexGrid();
+	AHexCell();
+	void CreateTriangle(TArray<Triangle> triangles);
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	virtual void PostActorCreated() override;
 
 public:	
-	UPROPERTY(EditAnywhere)
-	int32 height = 10;
-
-	UPROPERTY(EditAnywhere)
-	int32 width = 10;
-
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	void createGrid();
-	void createCell(int, int, int);
 	
-	TArray<UStaticMeshComponent*> cells;
-	TArray<AActor*> cellsA;
-	TArray<UPrimitiveComponent*> cellNumbers;
+	FVector center;
+	void prepareScene();
+	UProceduralMeshComponent * mesh;
 
 };
