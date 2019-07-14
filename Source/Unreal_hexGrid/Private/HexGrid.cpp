@@ -1,11 +1,15 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "HexGrid.h"
+#include "HexMetrics.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "Engine/Classes/Components/SphereComponent.h"
 #include "CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Engine/Classes/Components/TextRenderComponent.h"
 #include "Engine/Classes/Components/PrimitiveComponent.h"
+#include "Core/Public/Internationalization/Text.h"
+
+#define LOCTEXT_NAMESPACE "Coordinates"
 
 
 // Sets default values
@@ -52,8 +56,11 @@ void AHexGrid::createGrid()
 
 void AHexGrid::createCell(int x, int y, int i)
 {
+
 	//Build location
-	FVector Location = FVector(x * 10.f, y * 10.f, 0.f);
+	FVector Location = FVector(x * (HexMetrics::innerRadius * 2.0f), 
+								y * (HexMetrics::outerRadius * 1.5f),
+								0.f);
 
 	//i is not in use yet
 	//Should be equal to index on the given cell array
@@ -77,18 +84,20 @@ void AHexGrid::createCell(int x, int y, int i)
 	IntAsString = "CountdownNumber " + FString::FromInt(i);
 	ConvertedFString = FName(*IntAsString);
 
+	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0} \n {1}"), x, y);
+
 	//Cast not working, cant array utextrendercomponent
 	cellNumbers.Add(CreateDefaultSubobject<UTextRenderComponent>(ConvertedFString));
 	UTextRenderComponent * myActor = Cast<UTextRenderComponent>(cellNumbers[i]);
 	if (myActor) {
 		myActor->SetupAttachment(RootComponent);
-		myActor->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
-		myActor->SetRelativeLocation(Location);
+		myActor->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
+		myActor->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 1.0f));
 		myActor->SetHorizontalAlignment(EHTA_Center);
 		myActor->SetVerticalAlignment(EVRTA_TextCenter);
 		myActor->SetTextRenderColor(FColor(0, 0, 0, 1));
-		myActor->SetWorldSize(15.0f);
-		myActor->SetText(IntAsString);
+		myActor->SetWorldSize(30.0f);
+		myActor->SetText(coordinatesT);
 	}
 
 	//TODO - TIME TO REFACTOR HEXMETRICS!

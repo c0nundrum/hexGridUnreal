@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "HexGrid.generated.h"
 
+
 UCLASS()
 class UNREAL_HEXGRID_API AHexGrid : public AActor
 {

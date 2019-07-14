@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HexMetrics.h"
 #include "ProceduralMeshComponent.h"
 #include "Grid.generated.h"
 
@@ -45,10 +46,10 @@ private:
 	FVector v2 = FVector(0, 100, 0);
 	FVector v3 = FVector(0, 0, 100);
 
-	static float outerRadius;
-	static float innerRadius;
+	//static float outerRadius;
+	//static float innerRadius;
 
-	TArray<FVector> VectorArray;
+	/*TArray<FVector> VectorArray;*/
 
 	FVector center;
 
