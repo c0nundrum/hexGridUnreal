@@ -4,6 +4,9 @@
 #include "HexCell.h"
 #include "HexMetrics.h"
 #include "ProceduralMeshComponent.h"
+#include "Engine/Classes/Materials/Material.h"
+#include "CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "Engine/Classes/Materials/MaterialInstanceDynamic.h"
 
 // Sets default values
 AHexCell::AHexCell()
@@ -18,6 +21,14 @@ AHexCell::AHexCell()
 
 	prepareScene();
 
+	static ConstructorHelpers::FObjectFinder<UMaterial> Material(TEXT("Material'/Game/materials/vtxColor.vtxColor'"));
+
+	if (Material.Object != NULL)
+	{
+		MMaterial = (UMaterial*)Material.Object;
+	}
+
+
 }
 
 // Called when the game starts or when spawned
@@ -25,6 +36,16 @@ void AHexCell::BeginPlay()
 {
 	Super::BeginPlay();
 	
+}
+
+void AHexCell::PostActorCreated()
+{
+	Super::PostActorCreated();
+
+	DynMMaterial = UMaterialInstanceDynamic::Create(MMaterial, this);
+
+	mesh->SetMaterial(0, DynMMaterial);
+
 }
 
 void AHexCell::prepareScene()

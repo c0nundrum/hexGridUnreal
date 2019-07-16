@@ -33,6 +33,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	void createGrid();
 	void createCell(int, int, int);
+
+	void createHexCell(int, int, int);
 	
 	TArray<UStaticMeshComponent*> cells;
 	TArray<AActor*> cellsA;

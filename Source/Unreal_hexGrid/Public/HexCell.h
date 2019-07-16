@@ -21,10 +21,13 @@ public:
 	// Sets default values for this actor's properties
 	AHexCell();
 	void CreateTriangle(TArray<Triangle> triangles);
+	UMaterial* MMaterial;
+	UMaterialInstanceDynamic* DynMMaterial;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void PostActorCreated() override;
 
 public:	
 	// Called every frame
@@ -33,5 +36,6 @@ public:
 	FVector center;
 	void prepareScene();
 	UProceduralMeshComponent * mesh;
+	
 
 };

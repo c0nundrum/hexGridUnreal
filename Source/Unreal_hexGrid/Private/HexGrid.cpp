@@ -11,7 +11,7 @@
 #include "Core/Public/Internationalization/Text.h"
 #include "Engine/Classes/Components/ChildActorComponent.h"
 #include "Runtime/CoreUObject/Public/UObject/UObjectGlobals.h"
-#include "ProceduralMeshComponent.h"
+
 
 #define LOCTEXT_NAMESPACE "Coordinates"
 
@@ -22,12 +22,12 @@ AHexGrid::AHexGrid()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	UProceduralMeshComponent* mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("GeneratedMesh"));
-	RootComponent = mesh;
-	// New in UE 4.17, multi-threaded PhysX cooking.
-	mesh->bUseAsyncCooking = true;
+	USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
+	RootComponent = SphereComponent;
+	SphereComponent->InitSphereRadius(40.0f);
+	SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
 
-	createGrid();
+	
 }
 
 // Called when the game starts or when spawned
@@ -47,35 +47,18 @@ void AHexGrid::Tick(float DeltaTime)
 void AHexGrid::PostActorCreated()
 {
 	Super::PostActorCreated();
-
-	//FVector Location(0.0f, 0.0f, 0.0f);
-	//FRotator Rotation(0.0f, 0.0f, 0.0f);
-	//FActorSpawnParameters SpawnInfo;
-	//AHexCell* cellActor = GetWorld()->SpawnActor<AHexCell>(Location, Rotation, SpawnInfo);
-	//cellActor->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
-
-	//This works better
-	UChildActorComponent* NewComp1 = NewObject<UChildActorComponent>(this);
-	NewComp1->bEditableWhenInherited = true;
-	NewComp1->RegisterComponent();
-	NewComp1->SetChildActorClass(AHexCell::StaticClass());
-	NewComp1->CreateChildActor();
-	NewComp1->AttachTo(RootComponent);
-
+	createGrid();
+	
 }
 
 void AHexGrid::createGrid()
 {
-	USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
-	RootComponent = SphereComponent;
-	SphereComponent->InitSphereRadius(40.0f);
-	SphereComponent->SetCollisionProfileName(TEXT("Pawn"));
-
 	//We got an array of cells that should be equal to height * width
 
 	for (int z = 0, i = 0; z < height; z++) {
 		for (int x = 0; x < width; x++) {
-			createCell(x, z, i++);
+			//createCell(x, z, i++);
+			createHexCell(x, z, i++);
 		}
 	}
 	
@@ -89,9 +72,6 @@ void AHexGrid::createCell(int x, int y, int i)
 		(x + y * 0.5f - y / 2) * (HexMetrics::innerRadius * 2.0f), 
 		y * (HexMetrics::outerRadius * 1.5f),
 		0.f);
-
-	//i is not in use yet
-	//Should be equal to index on the given cell array
 
 	FString IntAsString = "cell " + FString::FromInt(i);
 	FName ConvertedFString = FName(*IntAsString);
@@ -126,6 +106,38 @@ void AHexGrid::createCell(int x, int y, int i)
 		coordinatesRenderComp->SetWorldSize(30.0f);
 		coordinatesRenderComp->SetText(coordinatesT);
 	}
+}
+
+void AHexGrid::createHexCell(int x, int y, int i)
+{
+	//Build location
+	FVector Location = FVector(
+		(x + y * 0.5f - y / 2) * (HexMetrics::innerRadius * 2.0f),
+		y * (HexMetrics::outerRadius * 1.5f),
+		0.f);
+
+	FString IntAsString = "cell " + FString::FromInt(i);
+	FName ConvertedFString = FName(*IntAsString);
+
+	//Messes up if called from constructor
+	//UChildActorComponent* cell = CreateDefaultSubobject<UChildActorComponent>(ConvertedFString);
+	//cell->bEditableWhenInherited = true;
+	//cell->SetupAttachment(RootComponent);
+	//cell->RegisterComponent();
+	//cell->SetRelativeLocation(Location);
+	//cell->SetChildActorClass(AHexCell::StaticClass());
+	//cell->CreateChildActor();
+
+	//Cant be called from constructor
+	UChildActorComponent* cell = NewObject<UChildActorComponent>(this);
+	cell->bEditableWhenInherited = true;
+	cell->SetupAttachment(RootComponent);
+	cell->SetRelativeLocation(Location);
+	cell->RegisterComponent();
+	cell->SetChildActorClass(AHexCell::StaticClass());
+	cell->CreateChildActor();
+
+	//AHexCell* aCell = Cast<AHexCell>(cell);
 }
 
 
