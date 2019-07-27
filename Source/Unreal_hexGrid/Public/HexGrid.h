@@ -21,6 +21,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void PostActorCreated() override;
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
 
 public:	
 	UPROPERTY(EditAnywhere)

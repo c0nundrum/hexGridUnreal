@@ -64,6 +64,18 @@ void AHexGrid::createGrid()
 	
 }
 
+void AHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
+{
+	Super::PostEditChangeProperty(e);
+
+	//Need to clean the child actor components first
+	//probably something like
+	//cells[i]->UnregisterComponent();
+	//cells[i]->DestroyComponent();
+	//for each of the cells array, which is, of course not initialized so far :)
+	createGrid();
+}
+
 void AHexGrid::createCell(int x, int y, int i)
 {
 
