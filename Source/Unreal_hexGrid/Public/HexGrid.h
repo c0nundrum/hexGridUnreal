@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HexCell.h"
 #include "HexGrid.generated.h"
 
 
@@ -13,6 +14,9 @@ class UNREAL_HEXGRID_API AHexGrid : public AActor
 	GENERATED_BODY()
 	
 
+
+
+
 public:	
 	// Sets default values for this actor's properties
 	AHexGrid();
@@ -21,6 +25,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void PostActorCreated() override;
+	virtual void PostLoad() override;
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& e) override;
 
 public:	
@@ -30,15 +35,25 @@ public:
 	UPROPERTY(EditAnywhere)
 	int32 width = 10;
 
+	UPROPERTY()
+	TArray<UPrimitiveComponent*> cellNumbers;
+
+	UPROPERTY(VisibleAnywhere)
+	TArray<UChildActorComponent*> tCellCompArray;
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
 	void createGrid();
-	void createCell(int, int, int);
+	//void createCell(int, int, int);
 
 	void createHexCell(int, int, int);
 	
-	TArray<UStaticMeshComponent*> cells;
-	TArray<AActor*> cellsA;
-	TArray<UPrimitiveComponent*> cellNumbers;
+	void RepopulateCoordinates();
+
+	//TArray<UStaticMeshComponent*> cells;
+	//TArray<AActor*> cellsA;
+	
+	//TArray<AHexCell*> tCellArray;
 
 };

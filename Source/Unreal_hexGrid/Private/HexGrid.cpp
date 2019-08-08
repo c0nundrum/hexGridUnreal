@@ -2,7 +2,6 @@
 
 #include "HexGrid.h"
 #include "HexMetrics.h"
-#include "HexCell.h"
 #include "Engine/Classes/Components/StaticMeshComponent.h"
 #include "Engine/Classes/Components/SphereComponent.h"
 #include "CoreUObject/Public/UObject/ConstructorHelpers.h"
@@ -20,7 +19,7 @@
 AHexGrid::AHexGrid()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	USphereComponent* SphereComponent = CreateDefaultSubobject<USphereComponent>(TEXT("RootComponent"));
 	RootComponent = SphereComponent;
@@ -51,6 +50,14 @@ void AHexGrid::PostActorCreated()
 	
 }
 
+// This is called when actor is already in level and map is opened
+void AHexGrid::PostLoad()
+{
+	Super::PostLoad();
+
+}
+
+
 void AHexGrid::createGrid()
 {
 	//We got an array of cells that should be equal to height * width
@@ -73,52 +80,59 @@ void AHexGrid::PostEditChangeProperty(struct FPropertyChangedEvent& e)
 	//cells[i]->UnregisterComponent();
 	//cells[i]->DestroyComponent();
 	//for each of the cells array, which is, of course not initialized so far :)
+	for (auto& cell : tCellCompArray)
+	{
+		cell->UnregisterComponent();
+		cell->DestroyComponent();
+	}
 	createGrid();
 }
 
-void AHexGrid::createCell(int x, int y, int i)
-{
-
-	//Build location
-	FVector Location = FVector(
-		(x + y * 0.5f - y / 2) * (HexMetrics::innerRadius * 2.0f), 
-		y * (HexMetrics::outerRadius * 1.5f),
-		0.f);
-
-	FString IntAsString = "cell " + FString::FromInt(i);
-	FName ConvertedFString = FName(*IntAsString);
-
-	// Create and position plane on x y
-	cells.Add(CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString));
-	cells[i]->SetupAttachment(RootComponent);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
-	if (SphereVisualAsset.Succeeded())
-	{
-
-		cells[i]->SetStaticMesh(SphereVisualAsset.Object);
-		cells[i]->SetRelativeLocation(Location);
-		cells[i]->SetWorldScale3D(FVector(1.0f));
-	}
-
-	IntAsString = "CountdownNumber " + FString::FromInt(i);
-	ConvertedFString = FName(*IntAsString);
-
-	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0}\n{1}"), x, y);
-
-
-	cellNumbers.Add(CreateDefaultSubobject<UTextRenderComponent>(ConvertedFString));
-	UTextRenderComponent * coordinatesRenderComp = Cast<UTextRenderComponent>(cellNumbers[i]);
-	if (coordinatesRenderComp) {
-		coordinatesRenderComp->SetupAttachment(RootComponent);
-		coordinatesRenderComp->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
-		coordinatesRenderComp->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 1.0f));
-		coordinatesRenderComp->SetHorizontalAlignment(EHTA_Center);
-		coordinatesRenderComp->SetVerticalAlignment(EVRTA_TextCenter);
-		coordinatesRenderComp->SetTextRenderColor(FColor(0, 0, 0, 1));
-		coordinatesRenderComp->SetWorldSize(30.0f);
-		coordinatesRenderComp->SetText(coordinatesT);
-	}
-}
+//void AHexGrid::createCell(int x, int y, int i)
+//{
+//
+//	//Build location
+//	FVector Location = FVector(
+//		(x + y * 0.5f - y / 2) * (HexMetrics::innerRadius * 2.0f), 
+//		y * (HexMetrics::outerRadius * 1.5f),
+//		0.f);
+//
+//	FString IntAsString = "cell " + FString::FromInt(i);
+//	FName ConvertedFString = FName(*IntAsString);
+//
+//	// Create and position plane on x y
+//	cells.Add(CreateDefaultSubobject<UStaticMeshComponent>(ConvertedFString));
+//	cells[i]->SetupAttachment(RootComponent);
+//	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Plane.Shape_Plane"));
+//	if (SphereVisualAsset.Succeeded())
+//	{
+//
+//		cells[i]->SetStaticMesh(SphereVisualAsset.Object);
+//		cells[i]->SetRelativeLocation(Location);
+//		cells[i]->SetWorldScale3D(FVector(1.0f));
+//	}
+//
+//	IntAsString = "CountdownNumber " + FString::FromInt(i);
+//	ConvertedFString = FName(*IntAsString);
+//
+//	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0}\n{1}"), x, y);
+//
+//	#undef LOCTEXT_NAMESPACE
+//
+//
+//	cellNumbers.Add(CreateDefaultSubobject<UTextRenderComponent>(ConvertedFString));
+//	UTextRenderComponent * coordinatesRenderComp = Cast<UTextRenderComponent>(cellNumbers[i]);
+//	if (coordinatesRenderComp) {
+//		coordinatesRenderComp->SetupAttachment(RootComponent);
+//		coordinatesRenderComp->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
+//		coordinatesRenderComp->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 1.0f));
+//		coordinatesRenderComp->SetHorizontalAlignment(EHTA_Center);
+//		coordinatesRenderComp->SetVerticalAlignment(EVRTA_TextCenter);
+//		coordinatesRenderComp->SetTextRenderColor(FColor(0, 0, 0, 1));
+//		coordinatesRenderComp->SetWorldSize(30.0f);
+//		coordinatesRenderComp->SetText(coordinatesT);
+//	}
+//}
 
 void AHexGrid::createHexCell(int x, int y, int i)
 {
@@ -148,8 +162,37 @@ void AHexGrid::createHexCell(int x, int y, int i)
 	cell->RegisterComponent();
 	cell->SetChildActorClass(AHexCell::StaticClass());
 	cell->CreateChildActor();
+	tCellCompArray.Emplace(cell);
+	
 
-	//AHexCell* aCell = Cast<AHexCell>(cell);
+	AHexCell* aCell = Cast<AHexCell>(cell->GetChildActor());
+
+	if (aCell) {
+		aCell->SetCoordinate(x, y);
+		//We are not using this for anything, might delete it and just call the UChildActorComponent array tCellCompArray, casting as needed.
+		//tCellArray.Emplace(aCell);
+	}
+
+	//FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0}\n{1}"), x, y);
+	//
+	//UTextRenderComponent * tCoordinates = NewObject<UTextRenderComponent>(this);
+	//tCoordinates->bEditableWhenInherited = true;
+	//tCoordinates->SetupAttachment(RootComponent);
+	//tCoordinates->SetRelativeLocation(FVector(Location.X, Location.Y, Location.Z + 2.0f));
+	//tCoordinates->RegisterComponent();
+	//tCoordinates->SetTextRenderColor(FColor::Red);
+	//tCoordinates->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
+	//tCoordinates->SetHorizontalAlignment(EHTA_Center);
+	//tCoordinates->SetVerticalAlignment(EVRTA_TextCenter);
+	//tCoordinates->SetText(coordinatesT);
+	//tCoordinates->AttachTo(RootComponent);
+	
+}
+
+void AHexGrid::RepopulateCoordinates()
+{
+
 }
 
 
+#undef LOCTEXT_NAMESPACE

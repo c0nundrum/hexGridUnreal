@@ -8,11 +8,13 @@
 #include "CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "Engine/Classes/Materials/MaterialInstanceDynamic.h"
 
+#define LOCTEXT_NAMESPACE "Coordinates"
+
 // Sets default values
 AHexCell::AHexCell()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	mesh = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("GeneratedMesh"));
 	RootComponent = mesh;
@@ -29,13 +31,36 @@ AHexCell::AHexCell()
 	}
 
 
+	cellLocation = CreateDefaultSubobject<UTextRenderComponent>("TextComponent");
+	cellLocation->SetTextRenderColor(FColor::Green);
+	cellLocation->SetRelativeRotation(FRotator(90.0f, 0.0f, 180.0f));
+	cellLocation->SetRelativeLocation(FVector(0.0f, 0.0f, 1.0f));
+	cellLocation->SetHorizontalAlignment(EHTA_Center);
+	cellLocation->SetVerticalAlignment(EVRTA_TextCenter);
+	cellLocation->AttachTo(RootComponent);
+	//cellLocation->RegisterComponent();
+
+}
+
+void AHexCell::SetCoordinate(int x, int y)
+{
+	iXCoordinate = x;
+
+	iYCoordinate = y;
+
+	UE_LOG(LogTemp, Warning, TEXT("Setting coordinates %d %d"), iXCoordinate, iYCoordinate);
+
+	FText coordinatesT = FText::Format(LOCTEXT("Coordinates", "{0}\n{1}"), iXCoordinate, iYCoordinate);
+	FVector Location = GetActorLocation();
+	
+	cellLocation->SetText(coordinatesT);
+
 }
 
 // Called when the game starts or when spawned
 void AHexCell::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 void AHexCell::PostActorCreated()
@@ -102,10 +127,18 @@ void AHexCell::CreateTriangle(TArray<Triangle> triangles)
 
 	}
 
-	mesh->CreateMeshSection_LinearColor(0, vertices, Triangles, normals, UV0, vertexColors, tangents, true);
+	mesh->CreateMeshSection_LinearColor(0, vertices, Triangles, normals, UV0, vertexColors, tangents, false);
 
 	// Enable collision data
-	mesh->ContainsPhysicsTriMeshData(true);
+	//mesh->ContainsPhysicsTriMeshData(true);
+
+	//Empty Arrays for safety
+	vertices.Empty();
+	Triangles.Empty();
+	normals.Empty();
+	tangents.Empty();
+	vertexColors.Empty();
+	UV0.Empty();
 }
 
-
+#undef LOCTEXT_NAMESPACE
